@@ -27,8 +27,8 @@ struct eServiceAppOptions
 						   connectionSpeedInKb(std::numeric_limits<unsigned int>::max()){};
 };
 
-#if SIGCXX_MAJOR_VERSION == 2
-class eServiceApp : public sigc::trackable,
+#if SIGCXX_MAJOR_VERSION >= 2
+class eServiceApp: public sigc::trackable,
 #else
 class eServiceApp : public Object,
 #endif
@@ -51,8 +51,10 @@ class eServiceApp : public Object,
 	bool m_subservices_checked;
 	void fillSubservices();
 
-#if SIGCXX_MAJOR_VERSION == 2
-	sigc::signal2<void, iPlayableService *, int> m_event;
+#if SIGCXX_MAJOR_VERSION == 3
+	sigc::signal<void(iPlayableService*,int)> m_event;
+#elif SIGCXX_MAJOR_VERSION == 2
+	sigc::signal2<void,iPlayableService*,int> m_event;
 #else
 	Signal2<void, iPlayableService *, int> m_event;
 #endif
@@ -109,8 +111,10 @@ public:
 	~eServiceApp();
 
 	// iPlayableService
-#if SIGCXX_MAJOR_VERSION == 2
-	RESULT connectEvent(const sigc::slot2<void, iPlayableService *, int> &event, ePtr<eConnection> &connection);
+#if SIGCXX_MAJOR_VERSION == 3
+	RESULT connectEvent(const sigc::slot<void(iPlayableService*,int)> &event, ePtr<eConnection> &connection);
+#elif SIGCXX_MAJOR_VERSION == 2
+	RESULT connectEvent(const sigc::slot2<void,iPlayableService*,int> &event, ePtr<eConnection> &connection);
 #else
 	RESULT connectEvent(const Slot2<void, iPlayableService *, int> &event, ePtr<eConnection> &connection);
 #endif
@@ -127,86 +131,22 @@ public:
 		return -1;
 	}
 #endif
-	RESULT seek(ePtr<iSeekableService> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT pause(ePtr<iPauseableService> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT audioTracks(ePtr<iAudioTrackSelection> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT audioChannel(ePtr<iAudioChannelSelection> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT info(ePtr<iServiceInformation> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT subServices(ePtr<iSubserviceList> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT frontendInfo(ePtr<iFrontendInformation> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT timeshift(ePtr<iTimeshiftService> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT tap(ePtr<iTapService> &ptr)
-	{
-		ptr = nullptr;
-		return -1;
-	};
-	RESULT cueSheet(ePtr<iCueSheet> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT subtitle(ePtr<iSubtitleOutput> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT audioDelay(ePtr<iAudioDelay> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT rdsDecoder(ePtr<iRdsDecoder> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT stream(ePtr<iStreamableService> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
-	RESULT streamed(ePtr<iStreamedService> &ptr)
-	{
-		ptr = this;
-		return 0;
-	};
-	RESULT keys(ePtr<iServiceKeys> &ptr)
-	{
-		ptr = 0;
-		return -1;
-	};
+	RESULT seek(ePtr<iSeekableService> &ptr){ ptr=this; return 0;};
+	RESULT pause(ePtr<iPauseableService> &ptr){ ptr=this; return 0;};
+	RESULT audioTracks(ePtr<iAudioTrackSelection> &ptr) { ptr=this; return 0;};
+	RESULT audioChannel(ePtr<iAudioChannelSelection> &ptr) { ptr=this; return 0;};
+	RESULT info(ePtr<iServiceInformation> &ptr) { ptr=this; return 0;};
+	RESULT subServices(ePtr<iSubserviceList> &ptr){ ptr=this; return 0;};
+	RESULT frontendInfo(ePtr<iFrontendInformation> &ptr){ ptr=0; return -1;};
+	RESULT timeshift(ePtr<iTimeshiftService> &ptr){ ptr=0; return -1;};
+	RESULT tap(ePtr<iTapService> &ptr) { ptr = nullptr; return -1; };
+	RESULT cueSheet(ePtr<iCueSheet> &ptr){ ptr=0; return -1;};
+	RESULT subtitle(ePtr<iSubtitleOutput> &ptr){ ptr=this; return 0;};
+	RESULT audioDelay(ePtr<iAudioDelay> &ptr){ ptr=0; return -1;};
+	RESULT rdsDecoder(ePtr<iRdsDecoder> &ptr){ ptr=0; return -1;};
+	RESULT stream(ePtr<iStreamableService> &ptr){ ptr=0; return -1;};
+	RESULT streamed(ePtr<iStreamedService> &ptr){ ptr=this; return 0;};
+	RESULT keys(ePtr<iServiceKeys> &ptr){ ptr=0; return -1;};
 	void setQpipMode(bool value, bool audio){};
 
 	// iPausableService
