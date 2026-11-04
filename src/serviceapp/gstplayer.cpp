@@ -111,7 +111,7 @@ GstPlayer::GstPlayer(GstPlayerOptions& options): PlayerApp(STD_ERROR)
 std::vector<std::string> GstPlayer::buildCommand()
 {
 	std::vector<std::string> args;
-	args.push_back("gstplayer_gst-1.0");
+	args.push_back("gstplayer2");
 	args.push_back(mPath);
 	for (std::map<std::string,std::string>::const_iterator i(mHeaders.begin()); i!=mHeaders.end(); i++)
 	{
@@ -147,6 +147,7 @@ int GstPlayer::start(eMainloop* context)
 
 int GstPlayer::sendStop(){ return processSend(std::string("q\n"));}
 int GstPlayer::sendForceStop(){ processKill(); return 0;}
+int GstPlayer::sendKill(){ processForceKill(); return 0;}
 int GstPlayer::sendPause(){ return processSend(std::string("p\n"));}
 int GstPlayer::sendResume(){ return processSend(std::string("c\n"));}
 int GstPlayer::sendUpdateLength(){ return processSend(std::string("l\n"));}
