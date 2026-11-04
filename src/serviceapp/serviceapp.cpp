@@ -188,8 +188,6 @@ eServiceApp::eServiceApp(eServiceReference ref)
 	  m_width(-1), m_height(-1), m_progressive(-1), m_subtitle_pages(0), m_selected_subtitle_track(0), m_prev_subtitle_message(0), m_prev_subtitle_fps(1), m_prev_decoder_time(-1),
 	  m_decoder_time_valid_state(0) {
 	options = createOptions(ref);
-	if (!ref.alternativeurl.empty())
-		m_ref.path = ref.alternativeurl;
 	extplayer = createPlayer(ref, getHeaders(ref.path));
 	player = new PlayerBackend(extplayer);
 
