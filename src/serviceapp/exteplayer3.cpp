@@ -25,6 +25,11 @@ const std::string  EXT3_PLAYBACK_MPEGTS_PROGRAM    = "mpegts_program_id";
 const std::string  EXT3_RTMP_PROTOCOL              = "rtmpproto";
 const std::string  EXT3_NICE_VALUE                 = "nice";
 const std::string  EXT3_FFMPEG_SETTING_STRING      = "ffmpeg_option";
+const std::string  EXT3_ARG_LCASE_B                = "b";
+const std::string  EXT3_ARG_5                      = "5";
+const std::string  EXT3_ARG_6                      = "6";
+const std::string  EXT3_ARG_7                      = "7";
+const std::string  EXT3_ARGS_LIST                  = "args"; // cmdline like list of exteplayer3 arguments in a form "-arg1=value1-arg2=value2"
 
 SettingMap &ExtEplayer3Options::GetSettingMap()
 {
@@ -55,6 +60,11 @@ ExtEplayer3Options::ExtEplayer3Options()
 	settingMap[EXT3_PLAYBACK_DASH_VIDEO_ID]     = SettingEntry ("-0", "int");
 	settingMap[EXT3_PLAYBACK_DASH_AUDIO_ID]     = SettingEntry ("-1", "int");
 	settingMap[EXT3_FFMPEG_SETTING_STRING]      = SettingEntry ("-f", "string");
+	settingMap[EXT3_ARG_LCASE_B]                = SettingEntry ("-b", "int");
+	settingMap[EXT3_ARG_5]                      = SettingEntry ("-5", "string");
+	settingMap[EXT3_ARG_6]                      = SettingEntry ("-6", "string");
+	settingMap[EXT3_ARG_7]                      = SettingEntry ("-7", "string");
+	settingMap[EXT3_ARGS_LIST]                  = SettingEntry ("al", "argslist");
 }
 
 int ExtEplayer3Options::update(const std::string &key, const std::string &val)
@@ -107,6 +117,11 @@ int ExtEplayer3Options::update(const std::string &key, const std::string &val)
 		}
 		else if (entry.getType() == "string")
 		{
+        	entry.setValue(val);
+		}
+		else if (entry.getType() == "argslist")
+		{
+                     entry.setValue(val);
 		}
 	}
 	else
@@ -138,7 +153,20 @@ std::vector<std::string> ExtEplayer3::buildCommand()
 	std::vector<std::string> args;
 	args.push_back("exteplayer3");
 	size_t pos = mPath.find("&suburi=");
-	if (pos != std::string::npos)
+	size_t pos1 = mPath.find("&cenc_decryption_key=");
+	if (pos1 != std::string::npos)
+	{
+		args.push_back(mPath.substr(0, pos1));
+		args.push_back("-f");
+		args.push_back(mPath.substr((pos1) + 1,52));
+		if (pos != std::string::npos)
+		{
+			args.push_back(mPath.substr(0, pos));
+			args.push_back("-x");
+			args.push_back(mPath.substr(pos + 8));
+		}
+	}
+	else if (pos != std::string::npos)
 	{
 		args.push_back(mPath.substr(0, pos));
 		args.push_back("-x");
@@ -178,12 +206,41 @@ std::vector<std::string> ExtEplayer3::buildCommand()
 		}
 		if (i->second.getType() == "int" || i->second.getType() == "string")
 		{
-			std::stringstream ss;
-			ss << i->second.getAppArg();
-			ss << " ";
-			ss << i->second.getValue();
-			args.push_back(ss.str());
+            args.push_back(i->second.getAppArg()); //add arg name to list of args
+			args.push_back(i->second.getValue());  //add value to list of args
 		}
+		if (i->second.getType() == "argslist")
+                {
+                        std::stringstream ss(i->second.getValue());
+                        std::string item;
+
+                        while (std::getline(ss, item, '-'))
+                        {
+                                if (!item.empty())
+                                {
+                                        if (item.find("exteplayer3") != std::string::npos)
+                                        {
+                                                args[0] = item;
+                                        }
+                                        else
+                                        {
+                                                // split arg=value
+                                                size_t eq = item.find('=');
+                                                if (eq != std::string::npos)
+                                                {
+                                                        std::string key = item.substr(0, eq);
+                                                        std::string value = item.substr(eq + 1);
+                                                        args.push_back("-" + key);
+                                                        args.push_back(value);
+                                                }
+                                                else
+                                                {
+                                                        args.push_back(item);
+                                                }
+                                        }
+                                }
+                        }
+                }
 	}
 	return args;
 }
@@ -195,8 +252,18 @@ int ExtEplayer3::start(eMainloop *context)
 
 int ExtEplayer3::sendStop(){ return processSend(std::string("q\n"));}
 int ExtEplayer3::sendForceStop(){ processKill(); return 0;}
+int ExtEplayer3::sendKill(){ processForceKill(); return 0;}
 int ExtEplayer3::sendPause(){ return processSend(std::string("p\n"));}
 int ExtEplayer3::sendResume(){ return processSend(std::string("c\n"));}
+int ExtEplayer3::sendFastForward(int speed)
+{
+	std::stringstream sstm;
+	if (speed < 0)
+		sstm << "b" << -speed << std::endl;
+	else
+		sstm << "f" << speed << std::endl;
+	return processSend(sstm.str());
+}
 int ExtEplayer3::sendUpdateLength(){ return processSend(std::string("l\n"));}
 int ExtEplayer3::sendUpdatePosition(){ return processSend(std::string("j\n"));}
 int ExtEplayer3::sendUpdateAudioTracksList(){ return processSend(std::string("al\n"));}
@@ -404,6 +471,15 @@ void ExtEplayer3::handleJsonOutput(cJSON *json)
 			return;
 		}
 		recvSeekRelative(1, 0);
+	}
+	else if (!strcmp(key, "PLAYBACK_TRICK_END"))
+	{
+		recvWindEnd(cJSON_GetObjectItem(value, "dir")->valueint);
+	}
+	else if (!strcmp(key, "EPLAYER3_EXTENDED"))
+	{
+		cJSON *trick = cJSON_GetObjectItem(value, "trick");
+		mCanWind = trick && trick->valueint;
 	}
 	else
 	{

@@ -27,6 +27,10 @@ extern const std::string EXT3_PLAYBACK_MPEGTS_PROGRAM;
 extern const std::string EXT3_RTMP_PROTOCOL;
 extern const std::string EXT3_NICE_VALUE;
 extern const std::string EXT3_FFMPEG_SETTING_STRING;
+extern const std::string EXT3_ARG_LCASE_B;
+extern const std::string EXT3_ARG_5;
+extern const std::string EXT3_ARG_6;
+extern const std::string EXT3_ARG_7;
 
 struct ExtEplayer3Options : public IOption
 {
@@ -50,6 +54,7 @@ class ExtEplayer3: public PlayerApp, public BasePlayer
 
 	int sendStop();
 	int sendForceStop();
+	int sendKill();
 	int sendPause();
 	int sendResume();
 	int sendUpdateLength();
@@ -62,5 +67,6 @@ class ExtEplayer3: public PlayerApp, public BasePlayer
 	int sendSubtitleSelectTrack(int trackId);
 	int sendSeekTo(int seconds);
 	int sendSeekRelative(int seconds);
+	int sendFastForward(int speed);
 };
 #endif
