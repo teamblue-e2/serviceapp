@@ -512,11 +512,11 @@ void eServiceApp::signalEventUpdatedInfo() {
 	m_event(this, evUpdatedInfo);
 	// the player knows by now whether the stream has a length
 	m_event(this, evSeekableStatusChanged);
-	bool is_passthrough_fix_enabled = eSimpleConfig::getBool("config.plugins.serviceapp.passthrough_fix_enable", false);
+	bool is_passthrough_fix_enabled = eConfigManager::getConfigBoolValue("config.plugins.serviceapp.passthrough_fix_enable", true);
 	if (is_passthrough_fix_enabled) {
 		std::string pass = CFile::read("/proc/stb/audio/ac3");
 		if (replace_all(replace_all(pass, "\r", ""), "\n", "") == "passthrough") {
-			int passthrough_delay = eSimpleConfig::getInt("config.plugins.serviceapp.passthrough_fix_delay", 0);
+			int passthrough_delay = eConfigManager::getConfigIntValue("config.plugins.serviceapp.passthrough_fix_delay", 0);
 			m_passthrough_fix_timer->stop();
 			m_passthrough_fix_timer->start(passthrough_delay, true);
 		}
@@ -693,7 +693,7 @@ RESULT eServiceApp::start() {
 			headers = subservice.headers;
 		}
 	}
-	m_debug = eSimpleConfig::getBool("config.plugins.serviceapp.debug", false);
+	m_debug = eConfigManager::getConfigBoolValue("config.plugins.serviceapp.debug", false);
 	player->setDebug(m_debug);
 
 	// don't pass fragment part to player
