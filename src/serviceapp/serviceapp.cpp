@@ -1251,12 +1251,12 @@ int eServiceApp::getInfo(int w) {
 
 std::string eServiceApp::getInfoString(int w) {
 	switch (w) {
-		case sVideoInfo: {
+		/*case sVideoInfo: {
 			char buff[100];
 			snprintf(buff, sizeof(buff), "%d|%d|%d|%d|%d|%d", m_width, m_height, m_framerate, m_progressive, getInfo(sAspect), -1);
 			std::string videoInfo = buff;
 			return videoInfo;
-		}
+		}*/
 		case sProvider:
 			return m_ref.path.find("://") != std::string::npos ? "IPTV" : "FILE";
 		case sServiceref:
