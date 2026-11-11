@@ -17,6 +17,12 @@ from enigma import eEnv, eServiceReference
 from . import _, _ngettext
 from . import serviceapp_client
 
+try:
+    from Components.SystemInfo import BoxInfo
+    IMAGEDISTRO = BoxInfo.getItem("distro")
+except:
+    from boxbranding import getImageDistro
+    IMAGEDISTRO = getImageDistro()
 
 SINKS_DEFAULT = ("", "")
 SINKS_EXPERIMENTAL = ("dvbvideosinkexp", "dvbaudiosinkexp")
@@ -331,7 +337,13 @@ def main(session, **kwargs):
 
 
 def menu(menuid, **kwargs):
-	return [(_("ServiceApp"), main, "serviceapp_setup", None)] if menuid == "rec" else []
+    if IMAGEDISTRO in ("openhdf", "teamblue"):
+        if menuid == "system":
+            return [(_("ServiceApp"), main, "serviceapp_setup", None)]
+    else:
+        if menuid == "rec":
+            return [(_("ServiceApp"), main, "serviceapp_setup", None)]
+    return []
 
 
 def play_exteplayer3(session, service, **kwargs):
