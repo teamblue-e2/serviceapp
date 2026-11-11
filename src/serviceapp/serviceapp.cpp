@@ -830,7 +830,7 @@ void eServiceApp::restoreAudioTrack() {
 }
 
 void eServiceApp::saveAudioTrack(int track) {
-	auto& services = eDVBDB::getInstance()->iptv_services;
+	/*auto& services = eDVBDB::getInstance()->iptv_services;
 	for (const auto& service : services) {
 		if (service->m_reference_str == m_audioCacheReference) {
 			service->setCacheEntry(eDVBService::cMPEGAPID, track);
@@ -840,7 +840,15 @@ void eServiceApp::saveAudioTrack(int track) {
 	ePtr<eDVBService> service = new eDVBService;
 	service->m_reference_str = m_audioCacheReference;
 	service->setCacheEntry(eDVBService::cMPEGAPID, track);
-	services.push_back(service);
+	services.push_back(service);*/
+	auto& services = eDVBDB::getInstance()->iptv_services;
+	for (auto& service : services) {
+		if (service.s_ref == m_audioCacheReference) {
+			service.ampeg_pid = track;
+			return;
+		}
+	}
+	services.emplace_back(m_audioCacheReference, track, -1, -1, -1, -1, -1, -1, -1, -1);
 }
 
 int eServiceApp::getNumberOfTracks() {
